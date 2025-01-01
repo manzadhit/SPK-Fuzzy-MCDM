@@ -1,0 +1,25 @@
+<!-- templates/result.html -->
+{% extends "base.html" %}
+{% block content %}
+<h2>Hasil Perhitungan TOPSIS</h2>
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Ranking</th>
+                <th>Nama UMKM</th>
+                <th>Nilai</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for rank in rankings %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ rank.nama }}</td>
+                <td>{{ "%.4f"|format(rank.score) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

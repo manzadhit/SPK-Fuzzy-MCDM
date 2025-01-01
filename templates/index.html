@@ -1,0 +1,39 @@
+<!-- templates/index.html -->
+{% extends "base.html" %} {% block content %}
+<div class="d-flex justify-content-between">
+  <h2>Daftar UMKM</h2>
+  <a
+    class="btn btn-outline-danger d-flex justify-content-center align-items-center"
+    href="{{ url_for('reset') }}"
+    >Reset</a
+  >
+</div>
+<div class="table-responsive">
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Nama UMKM</th>
+        <th>Omzet</th>
+        <th>Aset</th>
+        <th>Jumlah Karyawan</th>
+        <th>Modal Sendiri</th>
+        <th>Kapasitas Produksi</th>
+        <th>Pinjaman Bank</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for umkm in data %}
+      <tr>
+        <td>{{ umkm.nama }}</td>
+        <td>{{ umkm.omzet }}</td>
+        <td>{{ umkm.aset }}</td>
+        <td>{{ umkm.jumlah_karyawan }}</td>
+        <td>{{ umkm.modal_sendiri }}</td>
+        <td>{{ umkm.kapasitas_produksi }}</td>
+        <td>{{ umkm.pinjaman_bank }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
