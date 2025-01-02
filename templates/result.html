@@ -1,25 +1,42 @@
-<!-- templates/result.html -->
-{% extends "base.html" %}
-{% block content %}
-<h2>Hasil Perhitungan TOPSIS</h2>
-<div class="table-responsive">
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Ranking</th>
-                <th>Nama UMKM</th>
-                <th>Nilai</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for rank in rankings %}
-            <tr>
-                <td>{{ loop.index }}</td>
-                <td>{{ rank.nama }}</td>
-                <td>{{ "%.4f"|format(rank.score) }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+{% extends 'base.html' %} {% block content %}
+<h2>Hasil Penilaian UMKM</h2>
+
+<div class="statistics">
+  <h3>Statistik Hasil Penilaian</h3>
+  <p>Total UMKM: {{ stats.total_umkm }}</p>
+  <p>Sangat Potensial: {{ stats.sangat_potensial }}</p>
+  <p>Potensial: {{ stats.potensial }}</p>
+  <p>Cukup Potensial: {{ stats.cukup_potensial }}</p>
+  <p>Kurang Potensial: {{ stats.kurang_potensial }}</p>
+  <p>Tidak Potensial: {{ stats.tidak_potensial }}</p>
 </div>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Ranking</th>
+      <th>Nama UMKM</th>
+      <th>Skor</th>
+      <th>Kategori</th>
+      <th>Detail</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for rank in rankings %}
+    <tr>
+      <td>{{ rank.rank }}</td>
+      <td>{{ rank.nama }}</td>
+      <td>{{ rank.score }}</td>
+      <td>{{ rank.kategori }}</td>
+      <td>
+        <a
+          href="{{ url_for('detail', nama=rank.nama) }}"
+          class="btn btn-info btn-sm"
+          >Lihat Detail</a
+        >
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
 {% endblock %}

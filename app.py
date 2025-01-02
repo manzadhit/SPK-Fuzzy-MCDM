@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 import sqlite3
 import os
-from fuzzy_logic import calculate_topsis
+from fuzzy_logic import criteria_type, fuzzify_criteria, criteria_weights, calculate_final_ranking
 
 app = Flask(__name__)
 DATABASE = 'umkm.db'
@@ -76,13 +76,48 @@ def result():
     for umkm in data:
         umkm.pop('id', None)
 
-    scores = calculate_topsis(data)
-    rankings = [{'nama': umkm['nama'], 'score': score}
-                for umkm, score in zip(data, scores)]
-    rankings.sort(key=lambda x: x['score'], reverse=True)
+    rankings = calculate_final_ranking(data)
 
-    return render_template('result.html', rankings=rankings)
+    # Menambahkan statistik
+    stats = {
+        'total_umkm': len(rankings),
+        'sangat_potensial': len([r for r in rankings if r['kategori'] == "Sangat Potensial"]),
+        'potensial': len([r for r in rankings if r['kategori'] == "Potensial"]),
+        'cukup_potensial': len([r for r in rankings if r['kategori'] == "Cukup Potensial"]),
+        'kurang_potensial': len([r for r in rankings if r['kategori'] == "Kurang Potensial"]),
+        'tidak_potensial': len([r for r in rankings if r['kategori'] == "Tidak Potensial"])
+    }
 
+    return render_template('result.html', rankings=rankings, stats=stats)
+
+
+@app.route('/detail/<nama>')
+def detail(nama):
+    conn = get_db_connection()
+    umkm = conn.execute(
+        'SELECT * FROM umkm WHERE nama = ?', (nama,)).fetchone()
+    conn.close()
+
+    if not umkm:
+        return redirect(url_for('index'))
+
+    data = dict(umkm)
+    data.pop('id', None)
+
+    # Hitung nilai fuzzy untuk setiap kriteria
+    fuzzy_values = {}
+    for criteria in criteria_type.keys():
+        if criteria != 'nama':
+            fuzzy_values[criteria] = fuzzify_criteria(data[criteria], criteria)
+
+    detail_data = {
+        'umkm': data,
+        'fuzzy_values': fuzzy_values,
+        'criteria_type': criteria_type,
+        'criteria_weights': criteria_weights
+    }
+
+    return render_template('detail.html', data=detail_data)
 
 @app.route('/reset')
 def reset():

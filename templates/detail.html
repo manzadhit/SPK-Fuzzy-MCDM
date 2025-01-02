@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Detail UMKM: {{ data.umkm.nama }}</h2>
+
+<div class="detail-container">
+    <div class="basic-info">
+        <h3>Informasi Dasar</h3>
+        <table class="table">
+            <tr>
+                <th>Kriteria</th>
+                <th>Nilai</th>
+                <th>Tipe</th>
+                <th>Bobot</th>
+            </tr>
+            {% for criteria, value in data.umkm.items() %}
+            {% if criteria != 'nama' %}
+            <tr>
+                <td>{{ criteria|replace('_', ' ')|title }}</td>
+                <td>{{ value }}</td>
+                <td>{{ data.criteria_type[criteria] }}</td>
+                <td>{{ data.criteria_weights[criteria] }}</td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+        </table>
+    </div>
+
+    <div class="fuzzy-values">
+        <h3>Nilai Fuzzy</h3>
+        {% for criteria, fuzzy_set in data.fuzzy_values.items() %}
+        <div class="fuzzy-criteria">
+            <h4>{{ criteria|replace('_', ' ')|title }}</h4>
+            <table class="table">
+                <tr>
+                    <th>Label</th>
+                    <th>Derajat Keanggotaan</th>
+                </tr>
+                {% for label, value in fuzzy_set.items() %}
+                <tr>
+                    <td>{{ label|title }}</td>
+                    <td>{{ "%.4f"|format(value) }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="mt-4">
+    <a href="{{ url_for('result') }}" class="btn btn-primary">Kembali ke Hasil</a>
+</div>
+
+<style>
+.detail-container {
+    margin: 20px 0;
+}
+.fuzzy-criteria {
+    margin: 20px 0;
+}
+.table {
+    width: 100%;
+    margin-bottom: 1rem;
+    background-color: transparent;
+}
+.table th,
+.table td {
+    padding: 0.75rem;
+    vertical-align: top;
+    border-top: 1px solid #dee2e6;
+}
+</style>
+{% endblock %}

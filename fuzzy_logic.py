@@ -44,7 +44,7 @@ def fuzzify_criteria(value, criteria):
            'tinggi': (100, 150, 200)
        }
    }
-
+   
    memberships = {}
    for label, (a, b, c) in fuzzy_sets[criteria].items():
        memberships[label] = fuzzy_membership(value, a, b, c)
@@ -52,21 +52,22 @@ def fuzzify_criteria(value, criteria):
 
 
 criteria_weights = {
-    'omzet': 0.2,
-    'aset': 0.2,
+    'omzet': 0.25,
+    'aset': 0.20,
     'jumlah_karyawan': 0.15,
     'modal_sendiri': 0.15,
     'kapasitas_produksi': 0.15,
-    'pinjaman_bank': 0.15
+    'pinjaman_bank': 0.10
 }
 
 criteria_type = {
-    'omzet': 'cost',
-    'aset': 'cost',
-    'jumlah_karyawan': 'cost',
-    'modal_sendiri': 'cost',
-    'kapasitas_produksi': 'cost',
-    'pinjaman_bank': 'benefit'
+    'omzet': 'cost',      # Semakin kecil omzet, semakin membutuhkan bantuan
+    'aset': 'cost',       # Semakin kecil aset, semakin membutuhkan bantuan
+    'jumlah_karyawan': 'benefit',  # Semakin banyak karyawan, semakin perlu dipertahankan
+    'modal_sendiri': 'cost',    # Semakin kecil modal sendiri, semakin butuh bantuan
+    # Semakin tinggi kapasitas, menunjukkan potensi berkembang
+    'kapasitas_produksi': 'benefit',
+    'pinjaman_bank': 'cost'  # Semakin tinggi pinjaman, semakin berisiko
 }
 
 
@@ -113,3 +114,39 @@ def calculate_topsis(data):
    # Hitung skor akhir
    scores = neg_dist / (pos_dist + neg_dist)
    return scores
+
+
+def defuzzify_result(score):
+    if score >= 0.8:
+        return "Sangat Potensial"
+    elif score >= 0.6:
+        return "Potensial"
+    elif score >= 0.4:
+        return "Cukup Potensial"
+    elif score >= 0.2:
+        return "Kurang Potensial"
+    else:
+        return "Tidak Potensial"
+
+
+def calculate_final_ranking(data):
+    scores = calculate_topsis(data)
+    rankings = []
+
+    # Urutkan data berdasarkan score sebelum membuat ranking
+    sorted_data = list(zip(data, scores))
+    sorted_data.sort(key=lambda x: x[1], reverse=True)
+
+    for i, (umkm, score) in enumerate(sorted_data):
+        rankings.append({
+            'rank': i + 1,  # Ranking akan berurutan karena data sudah diurutkan
+            'nama': umkm['nama'],
+            'score': round(score, 4),
+            'kategori': defuzzify_result(score),
+            'detail_scores': {
+                criteria: umkm[criteria]
+                for criteria in criteria_type.keys()
+            }
+        })
+
+    return rankings  # Tidak perlu sort lagi karena sudah terurut
