@@ -25,25 +25,94 @@
         </table>
     </div>
 
-    <div class="fuzzy-values">
-        <h3>Nilai Fuzzy</h3>
-        {% for criteria, fuzzy_set in data.fuzzy_values.items() %}
-        <div class="fuzzy-criteria">
-            <h4>{{ criteria|replace('_', ' ')|title }}</h4>
+    <div class="calculation-steps">
+        <h3>Langkah Perhitungan TOPSIS</h3>
+        
+        <div class="step">
+            <h4>1. Matriks Keputusan</h4>
             <table class="table">
                 <tr>
-                    <th>Label</th>
-                    <th>Derajat Keanggotaan</th>
+                    <th>Kriteria</th>
+                    <th>Nilai</th>
                 </tr>
-                {% for label, value in fuzzy_set.items() %}
+                {% for criteria in data.criteria_type.keys() %}
                 <tr>
-                    <td>{{ label|title }}</td>
-                    <td>{{ "%.4f"|format(value) }}</td>
+                    <td>{{ criteria|replace('_', ' ')|title }}</td>
+                    <td>{{ "%.4f"|format(data.calculation_steps.matrix_row[loop.index0]) }}</td>
                 </tr>
                 {% endfor %}
             </table>
         </div>
-        {% endfor %}
+
+        <div class="step">
+            <h4>2. Matriks Ternormalisasi</h4>
+            <table class="table">
+                <tr>
+                    <th>Kriteria</th>
+                    <th>Nilai Normalisasi</th>
+                </tr>
+                {% for criteria in data.criteria_type.keys() %}
+                <tr>
+                    <td>{{ criteria|replace('_', ' ')|title }}</td>
+                    <td>{{ "%.4f"|format(data.calculation_steps.normalized_row[loop.index0]) }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+
+        <div class="step">
+            <h4>3. Matriks Terbobot</h4>
+            <table class="table">
+                <tr>
+                    <th>Kriteria</th>
+                    <th>Nilai Terbobot</th>
+                    <th>Bobot</th>
+                </tr>
+                {% for criteria in data.criteria_type.keys() %}
+                <tr>
+                    <td>{{ criteria|replace('_', ' ')|title }}</td>
+                    <td>{{ "%.4f"|format(data.calculation_steps.weighted_row[loop.index0]) }}</td>
+                    <td>{{ data.criteria_weights[criteria] }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+
+        <div class="step">
+            <h4>4. Solusi Ideal</h4>
+            <table class="table">
+                <tr>
+                    <th>Kriteria</th>
+                    <th>Ideal Positif</th>
+                    <th>Ideal Negatif</th>
+                </tr>
+                {% for criteria in data.criteria_type.keys() %}
+                <tr>
+                    <td>{{ criteria|replace('_', ' ')|title }}</td>
+                    <td>{{ "%.4f"|format(data.calculation_steps.ideal_positive[loop.index0]) }}</td>
+                    <td>{{ "%.4f"|format(data.calculation_steps.ideal_negative[loop.index0]) }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+
+        <div class="step">
+            <h4>5. Jarak dan Skor Final</h4>
+            <table class="table">
+                <tr>
+                    <th>Jarak ke Solusi Ideal Positif (D+)</th>
+                    <td>{{ "%.4f"|format(data.calculation_steps.positive_distance) }}</td>
+                </tr>
+                <tr>
+                    <th>Jarak ke Solusi Ideal Negatif (D-)</th>
+                    <td>{{ "%.4f"|format(data.calculation_steps.negative_distance) }}</td>
+                </tr>
+                <tr>
+                    <th>Skor Akhir (V)</th>
+                    <td>{{ "%.4f"|format(data.calculation_steps.final_score) }}</td>
+                </tr>
+            </table>
+        </div>
     </div>
 </div>
 
@@ -55,8 +124,11 @@
 .detail-container {
     margin: 20px 0;
 }
-.fuzzy-criteria {
+.step {
     margin: 20px 0;
+    padding: 15px;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
 }
 .table {
     width: 100%;

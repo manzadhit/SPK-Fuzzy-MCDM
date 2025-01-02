@@ -71,50 +71,63 @@ criteria_type = {
 }
 
 
-def calculate_topsis(data):
-   # Fuzzifikasi data
-   fuzzy_data = []
-   for umkm in data:
-       fuzzy_umkm = {}
-       for criteria, value in umkm.items():
-           if criteria != 'nama':
-               fuzzy_umkm[criteria] = fuzzify_criteria(value, criteria)
-       fuzzy_data.append(fuzzy_umkm)
+def calculate_topsis_with_steps(data):
+    # Fuzzifikasi data
+    fuzzy_data = []
+    for umkm in data:
+        fuzzy_umkm = {}
+        for criteria, value in umkm.items():
+            if criteria != 'nama':
+                fuzzy_umkm[criteria] = fuzzify_criteria(value, criteria)
+        fuzzy_data.append(fuzzy_umkm)
 
-   # Konversi ke matriks keputusan
-   matrix = []
-   for f_umkm in fuzzy_data:
-       row = []
-       for criteria in criteria_type.keys():
-           row.append(max(f_umkm[criteria].values()))
-       matrix.append(row)
-   matrix = np.array(matrix)
+    # Konversi ke matriks keputusan
+    matrix = []
+    for f_umkm in fuzzy_data:
+        row = []
+        for criteria in criteria_type.keys():
+            row.append(max(f_umkm[criteria].values()))
+        matrix.append(row)
+    matrix = np.array(matrix)
 
-   # Normalisasi matriks fuzzy
-   norm_matrix = matrix / np.sqrt(np.sum(matrix**2, axis=0))
+    # Normalisasi matriks fuzzy
+    denominator = np.sqrt(np.sum(matrix**2, axis=0))
+    norm_matrix = matrix / denominator
 
-   # Pembobotan
-   weighted_matrix = np.zeros_like(norm_matrix)
-   for i, criteria in enumerate(criteria_type.keys()):
-       weighted_matrix[:, i] = norm_matrix[:, i] * criteria_weights[criteria]
+    # Pembobotan
+    weighted_matrix = np.zeros_like(norm_matrix)
+    for i, criteria in enumerate(criteria_type.keys()):
+        weighted_matrix[:, i] = norm_matrix[:, i] * criteria_weights[criteria]
 
-   # Solusi ideal positif & negatif
-   ideal_pos = np.array([np.max(weighted_matrix[:, i]) if criteria_type[c] == 'benefit'
-                        else np.min(weighted_matrix[:, i])
-                        for i, c in enumerate(criteria_type.keys())])
+    # Solusi ideal positif & negatif
+    ideal_pos = np.array([np.max(weighted_matrix[:, i]) if criteria_type[c] == 'benefit'
+                         else np.min(weighted_matrix[:, i])
+                         for i, c in enumerate(criteria_type.keys())])
 
-   ideal_neg = np.array([np.min(weighted_matrix[:, i]) if criteria_type[c] == 'benefit'
-                        else np.max(weighted_matrix[:, i])
-                        for i, c in enumerate(criteria_type.keys())])
+    ideal_neg = np.array([np.min(weighted_matrix[:, i]) if criteria_type[c] == 'benefit'
+                         else np.max(weighted_matrix[:, i])
+                         for i, c in enumerate(criteria_type.keys())])
 
-   # Hitung jarak
-   pos_dist = np.sqrt(np.sum((weighted_matrix - ideal_pos)**2, axis=1))
-   neg_dist = np.sqrt(np.sum((weighted_matrix - ideal_neg)**2, axis=1))
+    # Hitung jarak
+    pos_dist = np.sqrt(np.sum((weighted_matrix - ideal_pos)**2, axis=1))
+    neg_dist = np.sqrt(np.sum((weighted_matrix - ideal_neg)**2, axis=1))
 
-   # Hitung skor akhir
-   scores = neg_dist / (pos_dist + neg_dist)
-   return scores
+    # Hitung skor akhir
+    scores = neg_dist / (pos_dist + neg_dist)
 
+    # Simpan langkah perhitungan
+    steps = {
+        'matrix': matrix.tolist(),
+        'normalized_matrix': norm_matrix.tolist(),
+        'weighted_matrix': weighted_matrix.tolist(),
+        'ideal_positive': ideal_pos.tolist(),
+        'ideal_negative': ideal_neg.tolist(),
+        'positive_distance': pos_dist.tolist(),
+        'negative_distance': neg_dist.tolist(),
+        'final_scores': scores.tolist()
+    }
+
+    return scores, steps
 
 def defuzzify_result(score):
     if score >= 0.8:
@@ -130,7 +143,7 @@ def defuzzify_result(score):
 
 
 def calculate_final_ranking(data):
-    scores = calculate_topsis(data)
+    scores, steps = calculate_topsis_with_steps(data)
     rankings = []
 
     # Urutkan data berdasarkan score sebelum membuat ranking

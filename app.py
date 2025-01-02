@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 import sqlite3
 import os
-from fuzzy_logic import criteria_type, fuzzify_criteria, criteria_weights, calculate_final_ranking
+from fuzzy_logic import criteria_type, fuzzify_criteria, criteria_weights, calculate_final_ranking, calculate_topsis_with_steps
 
 app = Flask(__name__)
 DATABASE = 'umkm.db'
@@ -94,12 +94,24 @@ def result():
 @app.route('/detail/<nama>')
 def detail(nama):
     conn = get_db_connection()
+    umkm_list = conn.execute('SELECT * FROM umkm').fetchall()
     umkm = conn.execute(
         'SELECT * FROM umkm WHERE nama = ?', (nama,)).fetchone()
     conn.close()
 
     if not umkm:
         return redirect(url_for('index'))
+
+    # Convert semua data untuk perhitungan
+    all_data = [dict(row) for row in umkm_list]
+    for d in all_data:
+        d.pop('id', None)
+
+    # Hitung TOPSIS dengan langkah-langkah
+    scores, steps = calculate_topsis_with_steps(all_data)
+
+    # Temukan index UMKM yang sedang dilihat
+    umkm_index = next(i for i, d in enumerate(all_data) if d['nama'] == nama)
 
     data = dict(umkm)
     data.pop('id', None)
@@ -114,7 +126,17 @@ def detail(nama):
         'umkm': data,
         'fuzzy_values': fuzzy_values,
         'criteria_type': criteria_type,
-        'criteria_weights': criteria_weights
+        'criteria_weights': criteria_weights,
+        'calculation_steps': {
+            'matrix_row': steps['matrix'][umkm_index],
+            'normalized_row': steps['normalized_matrix'][umkm_index],
+            'weighted_row': steps['weighted_matrix'][umkm_index],
+            'ideal_positive': steps['ideal_positive'],
+            'ideal_negative': steps['ideal_negative'],
+            'positive_distance': steps['positive_distance'][umkm_index],
+            'negative_distance': steps['negative_distance'][umkm_index],
+            'final_score': steps['final_scores'][umkm_index]
+        }
     }
 
     return render_template('detail.html', data=detail_data)
